@@ -105,6 +105,14 @@ describe("chord shapes in standard tuning", () => {
     }
   });
 
+  it("numbers all shapes in order up the neck", () => {
+    for (const [root, type] of [["G", "M"], ["B", "m"], ["F", "7"], ["C#", "m7b5"]]) {
+      const { shapes } = chordShapes(standard, true, root, type);
+      const place = shapes.map((v) => (v.frets.some((f) => f === 0) && v.maxFret <= 4 ? 0 : v.minFret));
+      expect(place, `${root}${type}`).toEqual([...place].sort((a, b) => a - b));
+    }
+  });
+
   it("CAGED shapes climb the neck in order", () => {
     const set = chordShapes(standard, true, "C", "M");
     const caged = set.shapes.filter((s) => s.caged);

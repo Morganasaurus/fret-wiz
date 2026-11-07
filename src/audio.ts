@@ -91,6 +91,30 @@ export function strum(midis: number[], spread = 0.035) {
   });
 }
 
+/** Play notes one after another (e.g. a scale shape), each fading after `ring` seconds. */
+export function playSequence(midis: number[], gap = 0.26, ring = 0.9) {
+  if (!midis.length) return;
+  const { ctx: c, master: out } = audio();
+  stopAll();
+  const start = c.currentTime + 0.05;
+  midis.forEach((m, i) => {
+    const src = c.createBufferSource();
+    src.buffer = pluckBuffer(c, m);
+    const gain = c.createGain();
+    const t = start + i * gap;
+    gain.gain.setValueAtTime(0.4, t);
+    gain.gain.linearRampToValueAtTime(0.4, t + ring);
+    gain.gain.linearRampToValueAtTime(0, t + ring + 0.15);
+    src.connect(gain).connect(out);
+    src.start(t);
+    src.stop(t + ring + 0.2);
+    active.push({ src, gain });
+    src.onended = () => {
+      active = active.filter((a) => a.src !== src);
+    };
+  });
+}
+
 /** Play a single note. */
 export function pluck(midi: number) {
   strum([midi], 0);

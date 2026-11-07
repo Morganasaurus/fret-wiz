@@ -1,0 +1,86 @@
+/* Scale picker and shape (box) selector */
+
+.scale-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick-scales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-scales button {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.quick-scales button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #111318;
+}
+
+.more-scales {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.more-scales.active select {
+  border-color: var(--accent);
+}
+
+.shape-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+  margin: 4px 0 8px;
+}
+
+.shape-buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--panel-2);
+  border-radius: 12px;
+  padding: 3px;
+}
+
+.shape-buttons button {
+  min-height: calc(var(--tap) - 6px);
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.shape-buttons button.num {
+  min-width: calc(var(--tap) - 2px);
+  padding: 0;
+  font-size: 1.05rem;
+}
+
+.shape-buttons button.active {
+  background: var(--accent);
+  color: #111318;
+}
+
+.shape-now {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}

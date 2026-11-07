@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { DOUBLE_INLAYS, type FretPosition, SINGLE_INLAYS, buildFretboard, fretWirePositions } from "../theory/fretboard";
 import { pretty } from "../theory/notes";
 import type { Dot } from "../view";
@@ -14,6 +14,11 @@ interface Props {
   realSpacing: boolean;
   /** A chord shape to emphasise (fret per string, -1 = muted). Other dots fade. */
   voicing?: number[] | null;
+  /**
+   * A scale shape to emphasise: "string:fret" -> copy index (0 = main copy, used for scrolling).
+   * Other dots fade.
+   */
+  shape?: Map<string, number> | null;
   onPick?: (pos: FretPosition) => void;
 }
 
@@ -26,7 +31,7 @@ const PAD_RIGHT = 16;
 const NUMBERS_H = 30;
 
 export function Fretboard(props: Props) {
-  const { strings, frets, dots, fretMin, fretMax, leftHanded, highStringTop, realSpacing, voicing, onPick } = props;
+  const { strings, frets, dots, fretMin, fretMax, leftHanded, highStringTop, realSpacing, voicing, shape, onPick } = props;
   const n = strings.length;
   const boardTop = PAD_Y;
   const boardH = STRING_GAP * (n - 1);
@@ -40,6 +45,19 @@ export function Fretboard(props: Props) {
   );
   const positions = useMemo(() => buildFretboard(strings, frets), [strings, frets]);
 
+  // When a scale shape is picked, scroll the neck sideways (on narrow screens) so it's visible.
+  const svgRef = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    if (!shape || !svgRef.current) return;
+    const scroller = svgRef.current.parentElement;
+    const marks = svgRef.current.querySelectorAll<SVGGElement>('[data-inshape="0"]');
+    if (!scroller || !marks.length || scroller.scrollWidth <= scroller.clientWidth) return;
+    const box = scroller.getBoundingClientRect();
+    const xs = [...marks].map((m) => m.getBoundingClientRect()).flatMap((r) => [r.left, r.right]);
+    const mid = (Math.min(...xs) + Math.max(...xs)) / 2 - box.left + scroller.scrollLeft;
+    scroller.scrollTo({ left: mid - scroller.clientWidth / 2, behavior: "smooth" });
+  }, [shape]);
+
   /** Mirror horizontally for left-handed players without flipping text. */
   const X = (x: number) => (leftHanded ? W - x : x);
   const rowY = (s: number) => boardTop + (highStringTop ? n - 1 - s : s) * STRING_GAP;
@@ -50,6 +68,7 @@ export function Fretboard(props: Props) {
 
   return (
     <svg
+      ref={svgRef}
       className="fretboard"
       viewBox={`0 0 ${W} ${H}`}
       role="img"
@@ -185,8 +204,8 @@ export function Fretboard(props: Props) {
             </g>
           );
         }
-        const inShape = voicing ? voicing[p.string] === p.fret : false;
-        const faded = voicing ? !inShape : false;
+        const inShape = voicing ? voicing[p.string] === p.fret : shape ? shape.has(`${p.string}:${p.fret}`) : false;
+        const faded = voicing || shape ? !inShape : false;
         const maxR = inShape ? 18 : dot.primary && !faded ? 17 : 12;
         const r = Math.max(8, Math.min(maxR, fretWidth(p.fret) * (inShape ? 0.44 : 0.4)));
         const dim = !inRange(p.fret);
@@ -196,9 +215,10 @@ export function Fretboard(props: Props) {
             key={`${p.string}-${p.fret}`}
             className="pos"
             opacity={dim ? 0.18 : faded ? (dot.primary ? 0.32 : 0.22) : 1}
+            data-inshape={inShape && shape ? String(shape.get(`${p.string}:${p.fret}`)) : undefined}
             onClick={() => onPick?.(p)}
           >
-            {inShape && <circle cx={cx} cy={cy} r={r + 6} fill={dot.fill} opacity={0.25} />}
+            {inShape && voicing && <circle cx={cx} cy={cy} r={r + 6} fill={dot.fill} opacity={0.25} />}
             {hit}
             {dot.root && <circle cx={cx} cy={cy} r={r + 3.5} fill="none" stroke={dot.fill} strokeWidth={2.5} />}
             <circle

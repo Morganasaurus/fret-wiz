@@ -9,6 +9,8 @@ export interface Settings {
   mode: Mode;
   root: string;
   scale: string;
+  /** Practice shape (1-based) for the scale, or null for the whole neck. */
+  scalePosition: number | null;
   chord: string;
   keyMode: KeyQuality;
   /** Chord picked from the key / scale chord list (overlaid on the neck), or null. */
@@ -35,6 +37,7 @@ export const DEFAULTS: Settings = {
   mode: "key",
   root: "D",
   scale: "minor pentatonic",
+  scalePosition: null,
   chord: "M",
   keyMode: "major",
   selected: { src: "key", degree: 1 },

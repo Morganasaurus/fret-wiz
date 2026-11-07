@@ -154,7 +154,7 @@ export function buildView(s: Settings): View {
     return {
       title: `${pretty(symbol)}  ·  ${pretty(s.root)} ${chordName(s.chord).toLowerCase()}`,
       subtitle: names(tones),
-      hint: "Bright dots are the shape to play, shown as a chord chart below. Faded dots are the same notes elsewhere. Use ‹ › to move to other shapes up the neck.",
+      hint: "Bright dots are the shape to play, shown as a chord chart below. Faded dots are the same notes elsewhere. Pick a numbered shape below to play the same chord further up the neck.",
       legend: tones,
       dots: dotsFrom(tones, s.labels),
       chord: { root: s.root, type: s.chord, symbol, tones },

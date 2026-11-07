@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { pluck, stopAll, strum } from "./audio";
+import { playSequence, pluck, stopAll, strum } from "./audio";
 import { CatalogSelect, ChordRow, Field, IntervalGuide, Legend, RootPicker, Segmented, Toggle } from "./components/Controls";
 import { Fretboard } from "./components/Fretboard";
+import { ScalePicker, ShapeBar } from "./components/ScaleTools";
 import { KeyWorkshop, KeysWithChord, type Playback, ShapePanel, shapesFor } from "./components/Workshop";
 import { type LabelStyle, type Mode, useSettings } from "./state";
-import { CHORDS, SCALES } from "./theory/catalog";
+import { CHORDS } from "./theory/catalog";
 import { type ChordRef, type KeyQuality, keysContaining, resolveRef } from "./theory/harmony";
 import { midi, nameForChroma } from "./theory/notes";
+import { allCopies, positionKey, scalePositions } from "./theory/positions";
 import { chordTones, diatonicChords } from "./theory/tones";
 import { TUNINGS, getTuning } from "./theory/tunings";
 import { voicingMidi } from "./theory/voicings";
@@ -38,6 +40,34 @@ export default function App() {
   const [shapePick, setShapePick] = useState<{ id: string; index: number } | null>(null);
   const shapeIndex = shapeSet ? (shapePick?.id === shapeId ? shapePick.index : shapeSet.easiest) : 0;
   const shape = shapeSet?.shapes[shapeIndex] ?? null;
+
+  // ---- scale shapes (boxes) ----
+  const positions = useMemo(
+    () => (s.mode === "scale" ? scalePositions(tuning.strings, s.root, s.scale, s.frets) : []),
+    [s.mode, tuning.strings, s.root, s.scale, s.frets],
+  );
+  const currentPosition = s.scalePosition ? (positions[s.scalePosition - 1] ?? null) : null;
+  const positionKeys = useMemo(
+    () =>
+      currentPosition
+        ? new Map(allCopies(currentPosition).flatMap((c, i) => c.notes.map((n) => [positionKey(n.string, n.fret), i] as const)))
+        : null,
+    [currentPosition],
+  );
+  const positionHint = currentPosition
+    ? `Shape ${currentPosition.number} of ${positions.length}: one hand position covering frets ${currentPosition.minFret}–${currentPosition.maxFret}${
+        currentPosition.copies.length
+          ? ` (it repeats 12 frets away at ${currentPosition.copies.map((c) => `${c.minFret}–${c.maxFret}`).join(" and ")}, so both are lit)`
+          : ""
+      }, ${
+        currentPosition.perString
+      } notes on each string${s.scale.includes("blues") ? " plus the blue note" : ""}. Ringed notes are the root. Learn it up and down, then move to the next shape, which overlaps this one.`
+    : "";
+  const playPosition = () => {
+    if (!s.sound || !currentPosition) return;
+    const up = [...new Set(currentPosition.notes.map((n) => n.midi))].sort((a, b) => a - b);
+    playSequence([...up, ...up.slice(0, -1).reverse()]);
+  };
 
   // ---- sound ----
   const strumChord = (root: string, type: string) => {
@@ -138,7 +168,18 @@ export default function App() {
             />
           </div>
         </div>
-        <p className="hint">{view.hint}</p>
+        {s.mode === "scale" && (
+          <ShapeBar
+            positions={positions}
+            value={currentPosition ? currentPosition.number : null}
+            onChange={(scalePosition) => {
+              stopAll();
+              update({ scalePosition });
+            }}
+            onPlay={playPosition}
+          />
+        )}
+        <p className="hint">{currentPosition ? positionHint : view.hint}</p>
         <div className="board-scroll">
           <Fretboard
             strings={tuning.strings}
@@ -149,7 +190,8 @@ export default function App() {
             leftHanded={s.leftHanded}
             highStringTop={s.highStringTop}
             realSpacing={s.realSpacing}
-            voicing={shape?.frets ?? null}
+            voicing={positionKeys ? null : (shape?.frets ?? null)}
+            shape={positionKeys}
             onPick={(p) => {
               if (s.sound) pluck(p.midi);
               if (s.mode === "notes") update({ notesFilter: "one", root: nameForChroma(p.chroma, s.preferFlats) });
@@ -290,7 +332,15 @@ export default function App() {
                 <RootPicker root={s.root} minor={isMinorContext(s)} onChange={(root) => update({ root })} />
               </Field>
               <Field label="Scale">
-                <CatalogSelect items={SCALES} value={s.scale} onChange={(scale) => update({ scale, selected: null })} />
+                <ScalePicker
+                  value={s.scale}
+                  onChange={(scale) => {
+                    stopAll();
+                    const count = scalePositions(tuning.strings, s.root, scale, s.frets).length;
+                    const scalePosition = s.scalePosition && s.scalePosition <= count ? s.scalePosition : null;
+                    update({ scale, selected: null, scalePosition });
+                  }}
+                />
               </Field>
               <ChordRow
                 chords={diatonicChords(s.root, s.scale)}

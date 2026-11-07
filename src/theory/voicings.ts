@@ -316,7 +316,14 @@ export function chordShapes(strings: string[], standardTuning: boolean, root: st
   // 3. Otherwise whatever the search rates easiest.
   if (easiest < 0) easiest = all.reduce((b, i) => (shapes[i].difficulty < shapes[b].difficulty ? i : b), 0);
 
-  return { shapes, easiest };
+  // Number shapes in order up the neck (open shapes first) so "shape 1 → 9" reads left to right.
+  const best = shapes[easiest];
+  const place = (v: ChordShape) => (v.frets.some((f) => f === 0) && v.maxFret <= 4 ? 0 : v.minFret);
+  const ordered = shapes
+    .map((v, i) => ({ v, i }))
+    .sort((a, b) => place(a.v) - place(b.v) || a.i - b.i)
+    .map((x) => x.v);
+  return { shapes: ordered, easiest: Math.max(0, ordered.indexOf(best)) };
 }
 
 /** Pitches (MIDI numbers) a voicing sounds, low to high. */

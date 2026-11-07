@@ -41,6 +41,12 @@ function shapeStory(chord: ActiveChord, shape: ChordShape): string {
     : `"${shape.caged} shape": the open ${openChordName} fingering moved up to the ${where}.`;
 }
 
+/** Very short "where on the neck" caption for the shape buttons, e.g. "open", "E·3fr". */
+function shortPlace(v: ChordShape): string {
+  const where = v.frets.some((f) => f === 0) && v.maxFret <= 4 ? "open" : `${v.minFret}fr`;
+  return v.caged ? `${v.caged}·${where}` : where;
+}
+
 export function ShapePanel({
   chord,
   set,
@@ -67,16 +73,28 @@ export function ShapePanel({
     );
   }
   const shape = set.shapes[index];
-  const step = (d: number) => onIndex((index + d + set.shapes.length) % set.shapes.length);
   return (
     <div className="shape-panel">
-      <button type="button" className="nav" aria-label="Previous shape" onClick={() => step(-1)}>
-        ‹
-      </button>
+      <div className="shape-picker" role="radiogroup" aria-label="Chord shape">
+        <span className="field-label">Shapes up the neck</span>
+        <div className="shape-picker-buttons">
+          {set.shapes.map((v, i) => (
+            <button
+              key={i}
+              type="button"
+              role="radio"
+              aria-checked={i === index}
+              className={`${i === index ? "active" : ""} ${i === set.easiest ? "is-easiest" : ""}`}
+              title={`${positionLabel(v)}${v.caged ? ` · ${v.caged} shape` : ""}${i === set.easiest ? " · easiest" : ""}`}
+              onClick={() => onIndex(i)}
+            >
+              <span className="num">{i + 1}</span>
+              <span className="where">{shortPlace(v)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
       <ChordDiagram voicing={shape} strings={strings} tones={tones} leftHanded={leftHanded} />
-      <button type="button" className="nav" aria-label="Next shape" onClick={() => step(1)}>
-        ›
-      </button>
       <div className="shape-info">
         <div className="shape-title">
           <strong>{pretty(chord.symbol)}</strong>

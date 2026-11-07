@@ -69,9 +69,9 @@
 
 .shape-panel {
   display: grid;
-  grid-template-columns: auto auto auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px 10px;
+  gap: 10px 16px;
   margin-top: 10px;
   padding: 12px;
   background: var(--panel-2);
@@ -83,15 +83,67 @@
   color: var(--muted);
 }
 
-.shape-panel .nav {
-  width: var(--tap);
-  height: 64px;
+.shape-picker {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shape-picker-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.shape-picker-buttons button {
+  position: relative;
+  min-width: 54px;
+  min-height: 50px;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
   border-radius: 10px;
   border: 1px solid var(--line);
   background: #1a1d23;
-  font-size: 1.8rem;
-  line-height: 1;
   cursor: pointer;
+}
+
+.shape-picker-buttons .num {
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1.1;
+}
+
+.shape-picker-buttons .where {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.shape-picker-buttons button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #111318;
+}
+
+.shape-picker-buttons button.active .where {
+  color: #3b2a07;
+}
+
+/* Small green dot marks the easiest shape */
+.shape-picker-buttons button.is-easiest::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
 }
 
 .shape-info {
@@ -163,13 +215,12 @@
   cursor: pointer;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 560px) {
   .shape-panel {
-    grid-template-columns: auto auto auto;
-    justify-content: center;
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
   .shape-info {
-    grid-column: 1 / -1;
     padding-left: 0;
   }
 }
