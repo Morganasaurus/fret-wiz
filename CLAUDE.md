@@ -1,7 +1,8 @@
 # Fret Wiz
 
 A guitar fretboard app for **learning and songwriting**. It is used mostly on an **iPad mini** (landscape on a
-music stand, sometimes portrait) and on a desktop. It is self-hosted on the homelab, LAN-only.
+music stand, sometimes portrait) and on a desktop. It is self-hosted on the homelab and **reachable from the
+internet** (Cloudflare Tunnel → reverse proxy → container), so treat every change as public-facing.
 
 The bar for every change: a learner should understand what they're looking at and know what to play. Prefer
 plain-English guidance, real playable shapes and songwriting help over dense theory.
@@ -76,6 +77,18 @@ Two review subagents live in `.claude/agents/`:
 - `music-theory-reviewer`: use after changing anything in `src/theory/`, chord or scale shapes, or wording that
   teaches theory.
 - `ipad-ui-reviewer`: use after visible UI changes, to check both iPad sizes in the browser.
+- `security-reviewer`: use after changing `nginx.conf`, the `Dockerfile`, `docker-compose.yml`, the workflow,
+  dependencies, or code that reads URLs, storage or user input; and before a release that touches any of them.
+
+## Security
+
+The site is public, the repo is public, and pushes to `main` reach the server through the `latest` image. So:
+no new runtime dependencies without a good reason; never render user or stored text as HTML; no third-party
+requests (analytics, fonts, CDNs); keep the GitHub Actions permissions minimal; keep the container non-root and
+read-only. Security headers live in `nginx.conf`, set once at server level (never `add_header` inside a
+`location`, or nginx drops the rest). The Content-Security-Policy carries a per-request nonce so Cloudflare's
+injected bot-detection and Web Analytics scripts can run; that's why the page is `no-store` with no ETag. A new
+external resource needs a CSP change. Workflow actions are pinned to commit SHAs (Dependabot updates them).
 
 ## Release and deploy
 
@@ -84,7 +97,8 @@ Use `/release` (`.claude/skills/release/`). In short: tests and build pass → c
 `sha-<short>`. The image is public.
 
 The app runs as the `fret-wiz` Portainer stack on the `portainer` VM (repo-backed, `docker-compose.yml`, host port
-8095), behind Nginx Proxy Manager at `https://fret-wiz.local.momolab.homes`. Git polling is deliberately off (it
+8095), behind Nginx Proxy Manager on the LAN and, publicly, behind a Cloudflare Tunnel (the owner has the
+addresses; keep hostnames out of the repo). Git polling is deliberately off (it
 races the image build). After a green build, the user runs **Pull and redeploy** in Portainer; otherwise Watchtower
 picks it up within about 3 days. Roll back by pinning the image to an older `sha-` tag.
 

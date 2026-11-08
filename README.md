@@ -53,6 +53,8 @@ services:
       - /tmp
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 60s
