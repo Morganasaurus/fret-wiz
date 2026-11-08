@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DOUBLE_INLAYS, type FretPosition, SINGLE_INLAYS, buildFretboard, fretWirePositions } from "../theory/fretboard";
 import { pretty } from "../theory/notes";
 import type { Dot } from "../view";
@@ -20,9 +20,13 @@ interface Props {
    */
   shape?: Map<string, number> | null;
   onPick?: (pos: FretPosition) => void;
+  /** Hover details for a position (mouse only). */
+  describe?: (pos: FretPosition) => { title: string; lines: string[] } | null;
+  /** Width of the drawing in SVG units. Wider = more room per fret at the same height (used on big screens). */
+  width?: number;
 }
 
-const W = 1040;
+const DEFAULT_W = 1040;
 const STRING_GAP = 46;
 const PAD_Y = 30;
 const LABEL_W = 34;
@@ -31,7 +35,9 @@ const PAD_RIGHT = 16;
 const NUMBERS_H = 30;
 
 export function Fretboard(props: Props) {
-  const { strings, frets, dots, fretMin, fretMax, leftHanded, highStringTop, realSpacing, voicing, shape, onPick } = props;
+  const { strings, frets, dots, fretMin, fretMax, leftHanded, highStringTop, realSpacing, voicing, shape, onPick, describe } = props;
+  const W = props.width ?? DEFAULT_W;
+  const [hover, setHover] = useState<{ x: number; y: number; title: string; lines: string[] } | null>(null);
   const n = strings.length;
   const boardTop = PAD_Y;
   const boardH = STRING_GAP * (n - 1);
@@ -41,7 +47,7 @@ export function Fretboard(props: Props) {
 
   const wires = useMemo(
     () => fretWirePositions(frets, realSpacing ? 0.55 : 0).map((p) => nutX + p * boardW),
-    [frets, realSpacing, nutX, boardW],
+    [frets, realSpacing, nutX, boardW, W],
   );
   const positions = useMemo(() => buildFretboard(strings, frets), [strings, frets]);
 
@@ -67,6 +73,7 @@ export function Fretboard(props: Props) {
   const midY = boardTop + boardH / 2;
 
   return (
+    <>
     <svg
       ref={svgRef}
       className="fretboard"
@@ -191,7 +198,13 @@ export function Fretboard(props: Props) {
         );
         if (!dot || (voicing && voicing[p.string] < 0 && p.fret === 0)) {
           return (
-            <g key={`${p.string}-${p.fret}`} className="pos" onClick={() => onPick?.(p)}>
+            <g key={`${p.string}-${p.fret}`} className="pos" onClick={() => onPick?.(p)} onPointerEnter={(e) => {
+              if (e.pointerType !== "mouse" || !describe) return;
+              const info = describe(p);
+              const r = e.currentTarget.getBoundingClientRect();
+              setHover(info ? { x: r.left + r.width / 2, y: r.top, ...info } : null);
+            }}
+            onPointerLeave={() => setHover(null)}>
               {hit}
             </g>
           );
@@ -209,6 +222,13 @@ export function Fretboard(props: Props) {
             opacity={dim ? 0.2 : faded ? (dot.primary ? 0.35 : 0.5) : 1}
             data-inshape={inShape && shape ? String(shape.get(`${p.string}:${p.fret}`)) : undefined}
             onClick={() => onPick?.(p)}
+            onPointerEnter={(e) => {
+              if (e.pointerType !== "mouse" || !describe) return;
+              const info = describe(p);
+              const r = e.currentTarget.getBoundingClientRect();
+              setHover(info ? { x: r.left + r.width / 2, y: r.top, ...info } : null);
+            }}
+            onPointerLeave={() => setHover(null)}
           >
             {inShape && voicing && <circle cx={cx} cy={cy} r={r + 6} style={{ fill: dot.fill }} opacity={0.22} />}
             {hit}
@@ -238,5 +258,14 @@ export function Fretboard(props: Props) {
         );
       })}
     </svg>
+    {hover && (
+      <div className="neck-tip" style={{ left: hover.x, top: hover.y }} role="tooltip">
+        <b>{hover.title}</b>
+        {hover.lines.map((l) => (
+          <span key={l}>{l}</span>
+        ))}
+      </div>
+    )}
+    </>
   );
 }

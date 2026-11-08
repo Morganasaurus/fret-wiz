@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { preloadSamples } from "./audio";
 import "./app.css";
+import "./desktop.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -138,7 +138,7 @@ export function SettingsSheet({
           </button>
         </header>
         <div className="sheet-body">
-          <Group title="Appearance">
+          <Group title="Appearance" footer="Automatic follows your device. On a large desktop screen it uses dark mode, which is kinder to OLED displays.">
             <div className="list-row">
               <div className="seg seg-full" role="radiogroup" aria-label="Appearance">
                 {(["system", "light", "dark"] as const).map((a) => (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { type SavedProgression, migrateProgressions } from "./progressions";
 import type { ChordRef, KeyQuality } from "./theory/harmony";
 
 export type Mode = "notes" | "scale" | "chord" | "key";
@@ -16,8 +17,10 @@ export interface Settings {
   /** Chord picked from the key / scale chord list (overlaid on the neck), or null. */
   selected: ChordRef | null;
   sevenths: boolean;
-  /** The user's own chord progression, stored by position in the key so it transposes. */
-  progression: ChordRef[];
+  /** The user's saved progressions (chords stored by position in the key, so they transpose). */
+  progressions: SavedProgression[];
+  /** The progression being edited and played. */
+  activeProgressionId: string;
   /** Seconds per chord when playing a progression. */
   tempo: number;
   notesFilter: NotesFilter;
@@ -46,7 +49,7 @@ export const DEFAULTS: Settings = {
   keyMode: "major",
   selected: { src: "key", degree: 1 },
   sevenths: false,
-  progression: [],
+  ...migrateProgressions({ root: "D", keyMode: "major" }),
   tempo: 2,
   notesFilter: "all",
   preferFlats: false,
@@ -72,7 +75,9 @@ function load(): Settings {
     const s: Settings = { ...DEFAULTS, ...JSON.parse(raw) };
     // Older saves had a "harmonic minor" key mode; keys are now major or minor.
     if (s.keyMode !== "major" && s.keyMode !== "minor") s.keyMode = "minor";
-    if (!Array.isArray(s.progression)) s.progression = [];
+    const parsed = JSON.parse(raw);
+    Object.assign(s, migrateProgressions(parsed));
+    delete (s as unknown as Record<string, unknown>).progression;
     return s;
   } catch {
     return DEFAULTS;

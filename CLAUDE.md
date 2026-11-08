@@ -24,6 +24,15 @@ vitest for tests. No backend; settings and the user's progression live in `local
   Design reference: `mockups/index.html` (direction A, the sidebar layout, was chosen).
 - Layout: sidebar (modes + the current mode's pickers, hideable; slides over on screens ≤ 900px), sticky
   toolbar, large title, neck card, chord inspector, then the mode's content.
+- Desktop layout (`src/desktop.css`, `components/Desktop.tsx`) switches on with
+  `(min-width: 1800px) and (hover: hover) and (pointer: fine)`; the owner's desktop is a 45" 5120×2160 OLED
+  (about 3413×1440 CSS px at 150%). It puts the neck (wider SVG, `width={1600}`) beside the inspector, the
+  workshop in three columns, a play bar in the header, hover details on frets, and defaults Automatic appearance to
+  dark (OLED). The iPad layout must stay unchanged; check 1133×744 and 744×1133 after desktop changes.
+- Keyboard shortcuts live in `App.tsx` (`onKey`): Space strum / play shape, 1–9 shapes (0 = whole neck in
+  Scales), ← → chords, P play/stop, A add to progression, S sidebar. Keep `ShortcutsCard` and the README in sync.
+- Saved progressions (`src/progressions.ts`): each has a name, key and steps; the active one always follows the
+  current key in Keys mode.
 - `src/audio.ts`: Web Audio guitar. Plays steel-string recordings from `public/samples/guitar-steel/` (13 files,
   one every 3 semitones, pitched to the notes between; credits in that folder and the README), with a light reverb
   and slightly randomised strums. Falls back to a Karplus-Strong synth until the samples have decoded.

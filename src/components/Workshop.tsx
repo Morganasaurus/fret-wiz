@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo, useState } from "react";
+import { moveStep } from "../progressions";
 import {
   type ChordRef,
   type KeyChord,
@@ -188,6 +189,13 @@ interface WorkshopProps {
   sevenths: boolean;
   selected: ChordRef | null;
   progression: ChordRef[];
+  /** Name of the progression being edited (also the playback label). */
+  progressionName: string;
+  onRename?: () => void;
+  onDelete?: () => void;
+  /** Desktop: lay the sections out in columns, with `extra` as a third column. */
+  columns?: boolean;
+  extra?: ReactNode;
   tempo: number;
   playback: Playback | null;
   strings: string[];
@@ -222,12 +230,13 @@ export function KeyWorkshop(p: WorkshopProps) {
     />
   );
 
-  const mineLabel = "My progression";
+  const mineLabel = p.progressionName;
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
   const playingMine = p.playback?.label === mineLabel;
 
   return (
-    <div className="workshop">
-      <section>
+    <div className={`workshop ${p.columns ? "columns" : ""}`}>
+      <section className="ws-chords">
         <div className="section-head">
           <h3>Chords in the key of {keyName}</h3>
           <Segmented7 sevenths={p.sevenths} onChange={p.onSevenths} />
@@ -252,7 +261,7 @@ export function KeyWorkshop(p: WorkshopProps) {
         </p>
       </section>
 
-      <section>
+      <section className="ws-borrowed">
         <div className="section-head">
           <h3>Borrowed chords</h3>
         </div>
@@ -263,9 +272,23 @@ export function KeyWorkshop(p: WorkshopProps) {
         <div className="cards borrowed">{borrowed.map(card)}</div>
       </section>
 
-      <section>
+      <section className="ws-mine">
         <div className="section-head">
           <h3>{mineLabel}</h3>
+          {(p.onRename || p.onDelete) && (
+            <span className="inline-actions">
+              {p.onRename && (
+                <button type="button" className="text-button" onClick={p.onRename}>
+                  Rename
+                </button>
+              )}
+              {p.onDelete && (
+                <button type="button" className="text-button destructive" onClick={p.onDelete}>
+                  Delete
+                </button>
+              )}
+            </span>
+          )}
           <div className="tempo">
             <span className="field-label">Speed</span>
             <select value={p.tempo} onChange={(e) => p.onTempo(Number(e.target.value))}>
@@ -285,7 +308,26 @@ export function KeyWorkshop(p: WorkshopProps) {
                 if (!c) return null;
                 const isNow = playingMine && p.playback!.index === i;
                 return (
-                  <span key={i} className={`step role-edge-${c.role} ${isNow ? "playing" : ""}`}>
+                  <span
+                    key={i}
+                    className={`step role-edge-${c.role} ${isNow ? "playing" : ""} ${dragFrom === i ? "dragging" : ""}`}
+                    draggable
+                    onDragStart={(e) => {
+                      setDragFrom(i);
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", String(i));
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (dragFrom !== null) p.onProgression(moveStep(p.progression, dragFrom, i));
+                      setDragFrom(null);
+                    }}
+                    onDragEnd={() => setDragFrom(null)}
+                  >
                     <button type="button" className="step-main" onClick={() => p.onSelect(ref)}>
                       <span className="card-roman">{pretty(c.roman)}</span>
                       <span className="step-symbol">{pretty(c.symbol)}</span>
@@ -319,12 +361,12 @@ export function KeyWorkshop(p: WorkshopProps) {
                 Clear
               </button>
             </div>
-            <p className="help small">Saved on this device. Change the key above and your progression moves with it.</p>
+            <p className="help small">Drag chords to reorder. Saved on this device; change the key and it moves with it.</p>
           </>
         )}
       </section>
 
-      <section>
+      <section className="ws-presets">
         <div className="section-head">
           <h3>Famous progressions in {keyName}</h3>
         </div>
@@ -365,6 +407,7 @@ export function KeyWorkshop(p: WorkshopProps) {
           })}
         </div>
       </section>
+      {p.columns && p.extra && <div className="ws-extra">{p.extra}</div>}
     </div>
   );
 }
