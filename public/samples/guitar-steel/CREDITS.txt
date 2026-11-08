@@ -1,0 +1,11 @@
+Steel-string acoustic guitar samples
+
+Recorded by the University of Iowa Electronic Music Studios (Musical Instrument Samples),
+https://theremin.music.uiowa.edu/MIS.html - offered free for any project, without restriction.
+
+Prepared as MP3s by Nicholaus P. Brosowsky in tonejs-instruments,
+https://github.com/nbrosowsky/tonejs-instruments - samples released under
+CC BY 3.0, https://creativecommons.org/licenses/by/3.0/
+
+Files used unmodified: E2 G2 A#2 C#3 E3 G3 A#3 C#4 E4 G4 A#4 C#5 D5 (sharps written "s").
+Fret Wiz pitches each recording up or down to the neighbouring notes at playback.

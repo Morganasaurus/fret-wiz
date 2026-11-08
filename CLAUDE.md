@@ -1,6 +1,6 @@
 # Fret Wiz
 
-A guitar fretboard app for **learning and songwriting**. Morgan uses it mostly on an **iPad mini** (landscape on a
+A guitar fretboard app for **learning and songwriting**. It is used mostly on an **iPad mini** (landscape on a
 music stand, sometimes portrait) and on a desktop. It is self-hosted on the homelab, LAN-only.
 
 The bar for every change: a learner should understand what they're looking at and know what to play. Prefer
@@ -16,9 +16,17 @@ vitest for tests. No backend; settings and the user's progression live in `local
   harmony), `harmony` (key chords, roles, borrowed chords, progressions), `voicings` (chord shapes),
   `positions` (scale shapes), `tunings`, `catalog` (scale and chord lists)
 - `src/view.ts`: turns settings into what the neck shows (dots, hint text, active chord)
-- `src/components/`: `Fretboard` (SVG neck), `ChordDiagram`, `Workshop` (keys and songwriting, shape panel),
-  `ScaleTools`, `Controls`
-- `src/audio.ts`: Web Audio plucked-string synth (no samples yet)
+- `src/components/`: `Shell` (iPad-style sidebar, grouped lists, switches, Settings sheet), `Icons`, `Fretboard`
+  (SVG neck), `ChordDiagram`, `Workshop` (keys and songwriting, shape panel), `ScaleTools`, `Controls`
+- `src/app.css`: the whole look. iOS/iPadOS style using Apple's system colours as CSS variables, with
+  `:root.theme-light` / `:root.theme-dark` (Appearance setting: Automatic follows the iPad). Use the tokens
+  (`--bg`, `--bg2`, `--label`, `--label2`, `--tint`, `--deg-1`…`--deg-7`, neck tokens), never hard-coded colours.
+  Design reference: `mockups/index.html` (direction A, the sidebar layout, was chosen).
+- Layout: sidebar (modes + the current mode's pickers, hideable; slides over on screens ≤ 900px), sticky
+  toolbar, large title, neck card, chord inspector, then the mode's content.
+- `src/audio.ts`: Web Audio guitar. Plays steel-string recordings from `public/samples/guitar-steel/` (13 files,
+  one every 3 semitones, pitched to the notes between; credits in that folder and the README), with a light reverb
+  and slightly randomised strums. Falls back to a Karplus-Strong synth until the samples have decoded.
 
 ## Music-theory rules already decided
 
@@ -47,7 +55,7 @@ npm run build      # typecheck + production build
 
 Before calling UI work done: `npm test`, `npm run build`, then look at it in the browser at **1133×744** (iPad mini
 landscape) and **744×1133** (portrait). Touch targets must be at least 44px. Check the console for errors.
-Morgan may be clicking in the browser pane at the same time: use a separate tab for checks.
+The user may be clicking in the browser pane at the same time: use a separate tab for checks.
 
 Two review subagents live in `.claude/agents/`:
 - `music-theory-reviewer`: use after changing anything in `src/theory/`, chord or scale shapes, or wording that
@@ -62,12 +70,15 @@ Use `/release` (`.claude/skills/release/`). In short: tests and build pass → c
 
 The app runs as the `fret-wiz` Portainer stack on the `portainer` VM (repo-backed, `docker-compose.yml`, host port
 8095), behind Nginx Proxy Manager at `https://fret-wiz.local.momolab.homes`. Git polling is deliberately off (it
-races the image build). After a green build, Morgan runs **Pull and redeploy** in Portainer; otherwise Watchtower
+races the image build). After a green build, the user runs **Pull and redeploy** in Portainer; otherwise Watchtower
 picks it up within about 3 days. Roll back by pinning the image to an older `sha-` tag.
 
 ## Conventions
 
-- Commit only when asked. The repo-local git identity is already set (GitHub noreply address); don't change it.
+- Commit only when asked. The repo-local git identity is already set (author "Fret Wiz", GitHub noreply address);
+  don't change it.
+- Never put the owner's personal name in files, commit messages, PRs or anything else pushed to GitHub. Refer to
+  "the user" or "the owner". The GitHub username in repo and image paths is fine (it's required).
 - Never commit secrets. The repo is public.
 - Keep `docker-compose.yml` in sync with the copy in the Homelab folder (`stacks/fret-wiz/docker-compose.yml`).
 - Third-party assets (such as audio samples) need a licence that allows redistribution in a public repo, plus a

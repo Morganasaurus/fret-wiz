@@ -42,21 +42,21 @@ export function ChordDiagram({ voicing, strings, tones, size = "lg", leftHanded 
       aria-label="Chord diagram"
     >
       {/* Nut (only when the chart starts at the first fret) */}
-      {start === 1 && <rect x={padX - 2} y={top - 5} width={sg * (n - 1) + 4} height={5} rx={1.5} fill="#e8e2d4" />}
+      {start === 1 && <rect x={padX - 2} y={top - 5} width={sg * (n - 1) + 4} height={5} rx={1.5} className="dg-nut" />}
 
       {/* Fret lines */}
       {Array.from({ length: shown + 1 }, (_, i) => (
-        <line key={`f${i}`} x1={padX} x2={padX + sg * (n - 1)} y1={top + i * fh} y2={top + i * fh} stroke="#596070" strokeWidth={1.2} />
+        <line key={`f${i}`} x1={padX} x2={padX + sg * (n - 1)} y1={top + i * fh} y2={top + i * fh} className="dg-fret" strokeWidth={1.2} />
       ))}
       {/* Strings */}
       {strings.map((_, s) => (
-        <line key={`s${s}`} x1={x(s)} x2={x(s)} y1={top} y2={top + shown * fh} stroke="#8b919c" strokeWidth={lg ? 1.4 : 1} />
+        <line key={`s${s}`} x1={x(s)} x2={x(s)} y1={top} y2={top + shown * fh} className="dg-string" strokeWidth={lg ? 1.4 : 1} />
       ))}
 
       {/* Open / muted markers */}
       {voicing.frets.map((f, s) =>
         f === 0 ? (
-          <circle key={`o${s}`} cx={x(s)} cy={top - (lg ? 14 : 9)} r={lg ? 6 : 3.6} fill="none" stroke="#cfd3da" strokeWidth={1.5} />
+          <circle key={`o${s}`} cx={x(s)} cy={top - (lg ? 14 : 9)} r={lg ? 6 : 3.6} className="dg-open" strokeWidth={1.5} />
         ) : f < 0 ? (
           <text key={`m${s}`} x={x(s)} y={top - (lg ? 13 : 8.5)} className="diagram-mute" textAnchor="middle" dominantBaseline="central" fontSize={lg ? 15 : 10}>
             ×
@@ -72,8 +72,7 @@ export function ChordDiagram({ voicing, strings, tones, size = "lg", leftHanded 
           width={Math.abs(x(voicing.barre.to) - x(voicing.barre.from)) + r * 2}
           height={r * 2}
           rx={r}
-          fill="#e8eaee"
-          opacity={0.9}
+          className="dg-barre"
         />
       )}
 
@@ -81,11 +80,11 @@ export function ChordDiagram({ voicing, strings, tones, size = "lg", leftHanded 
       {voicing.frets.map((f, s) => {
         if (f <= 0) return null;
         const tone = toneAt(s, f);
-        const fill = tone ? DEGREE_COLORS[tone.degree] : "#e8eaee";
+        const fill = tone ? DEGREE_COLORS[tone.degree] : "var(--label)";
         const label = fingers ? String(voicing.fingers[s] || "") : tone ? pretty(tone.label) : "";
         return (
           <g key={`d${s}`}>
-            <circle cx={x(s)} cy={y(f)} r={r} fill={fill} stroke={tone?.isRoot ? "#fff7e6" : "#111318"} strokeWidth={tone?.isRoot ? 2 : 1} />
+            <circle cx={x(s)} cy={y(f)} r={r} style={{ fill }} className={tone?.isRoot ? "dg-root" : undefined} />
             {lg && label && (
               <text x={x(s)} y={y(f)} textAnchor="middle" dominantBaseline="central" className="diagram-finger">
                 {label}
@@ -122,7 +121,7 @@ export function ChordDiagram({ voicing, strings, tones, size = "lg", leftHanded 
               textAnchor="middle"
               dominantBaseline="central"
               className="diagram-ivl"
-              fill={tone ? DEGREE_COLORS[tone.degree] : "#9aa1ad"}
+              style={{ fill: tone ? DEGREE_COLORS[tone.degree] : "var(--label2)" }}
             >
               {tone ? pretty(tone.label) : ""}
             </text>

@@ -15,9 +15,12 @@ It's a static web app: everything runs in the browser and settings are saved in 
 - **Scales**: major, minor, pentatonics, blues, the modes, harmonic and melodic minor, symmetric scales,
   with the chords built from each scale
 - **Notes**: every note, naturals only, or one note everywhere it appears (tap any fret to pick it)
-- **Sound**: tap a chord or fret to hear it (a small plucked-string synth, no samples)
+- **Sound**: tap a chord or fret to hear it, played with real steel-string acoustic guitar recordings (with a
+  small synth as a fallback while they load)
 - Labels as note names, intervals (R, ♭3, 5, ♭7) or blank, a "how to read this" hint for each view, and a guide to what each interval sounds like
 - Colours by scale degree, so a 3rd is always blue and a 5th always red
+- iPad-style design: a sidebar you can hide, Apple's system colours, and light and dark appearance that
+  follows the device (or can be set in Settings)
 - 12 tunings (standard, drop, open, DADGAD, 7-string, bass), 12–24 frets, a fret-range focus, left-handed view
 
 ## Development
@@ -31,6 +34,13 @@ npm run build      # typecheck + production build into dist/
 
 Music theory (spelling, intervals, keys) uses [tonal](https://github.com/tonaljs/tonal).
 Fretboard maths and diatonic harmony live in `src/theory/`, with tests in `src/theory/theory.test.ts`.
+
+## Credits
+
+Guitar samples (`public/samples/guitar-steel/`): steel-string acoustic guitar recorded by the
+[University of Iowa Electronic Music Studios](https://theremin.music.uiowa.edu/MIS.html), prepared as MP3s in
+[tonejs-instruments](https://github.com/nbrosowsky/tonejs-instruments) by Nicholaus P. Brosowsky and released under
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Used unmodified; see `CREDITS.txt` in that folder.
 
 ## Container
 

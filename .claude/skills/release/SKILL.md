@@ -1,6 +1,6 @@
 ---
 name: release
-description: Test, build, commit and push Fret Wiz, wait for the GitHub Actions image build, and confirm the new image is published. Run only when Morgan asks to release or ship.
+description: Test, build, commit and push Fret Wiz, wait for the GitHub Actions image build, and confirm the new image is published. Run only when the user asks to release or ship.
 disable-model-invocation: true
 argument-hint: "[commit message summary]"
 ---
@@ -19,6 +19,6 @@ Release the current Fret Wiz working tree. Stop and report at the first failure;
    `node .claude/skills/release/wait-for-build.mjs $(git rev-parse HEAD)`
    It prints the workflow result, each job's result, and whether `ghcr.io/morganasaurus/fret-wiz:sha-<short>`
    exists. If the build failed, fetch the failing job's details from the GitHub API and report them.
-6. **Report.** One short message: the commit, build result, image tag, and the next step for Morgan:
+6. **Report.** One short message: the commit, build result, image tag, and the next step for the user:
    "In Portainer, open the fret-wiz stack and use **Pull and redeploy** (re-pull image on). Otherwise Watchtower
    picks it up within about 3 days. Roll back by pinning the image to `sha-<previous>`."

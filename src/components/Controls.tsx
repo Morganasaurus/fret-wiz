@@ -12,11 +12,13 @@ interface SegmentedProps<T extends string> {
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
   label?: string;
+  /** Stretch to fill the row, segments sharing the width equally. */
+  full?: boolean;
 }
 
-export function Segmented<T extends string>({ value, options, onChange, label }: SegmentedProps<T>) {
+export function Segmented<T extends string>({ value, options, onChange, label, full }: SegmentedProps<T>) {
   return (
-    <div className="segmented" role="radiogroup" aria-label={label}>
+    <div className={`segmented ${full ? "full" : ""}`} role="radiogroup" aria-label={label}>
       {options.map((o) => (
         <button
           key={o.value}

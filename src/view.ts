@@ -5,14 +5,15 @@ import { type KeySummary, type Tone, byChroma, chordTones, diatonicChords, keySu
 import type { Settings } from "./state";
 
 /** Colour per scale degree (1-7). Root, 3rd, 5th and 7th get the most distinct hues. */
+/** Colour per scale degree (1-7), as theme tokens so light and dark modes get iOS's matching system colours. */
 export const DEGREE_COLORS: Record<number, string> = {
-  1: "#f59e0b",
-  2: "#c084fc",
-  3: "#38bdf8",
-  4: "#4ade80",
-  5: "#f87171",
-  6: "#94a3b8",
-  7: "#f472b6",
+  1: "var(--deg-1)",
+  2: "var(--deg-2)",
+  3: "var(--deg-3)",
+  4: "var(--deg-4)",
+  5: "var(--deg-5)",
+  6: "var(--deg-6)",
+  7: "var(--deg-7)",
 };
 
 /** What each interval tends to sound like, in plain English. */
@@ -38,9 +39,9 @@ export const INTERVAL_FEEL: Record<string, string> = {
   "13": "13th (a 6th up an octave). Rich and jazzy.",
 };
 
-const NATURAL_FILL = "#e5e7eb";
-const ACCIDENTAL_FILL = "#4b5563";
-const SECONDARY_FILL = "#3b4150";
+const NATURAL_FILL = "var(--dot-natural)";
+const ACCIDENTAL_FILL = "var(--dot-accidental)";
+const SECONDARY_FILL = "var(--ghost)";
 
 export interface Dot {
   label: string;
@@ -79,7 +80,7 @@ function labelFor(t: Tone, style: Settings["labels"]): string {
 function dotsFrom(tones: Tone[], style: Settings["labels"]): Map<number, Dot> {
   const map = new Map<number, Dot>();
   for (const [c, t] of byChroma(tones)) {
-    map.set(c, { label: labelFor(t, style), fill: DEGREE_COLORS[t.degree], ink: "#111318", primary: true, root: t.isRoot });
+    map.set(c, { label: labelFor(t, style), fill: DEGREE_COLORS[t.degree], ink: "#fff", primary: true, root: t.isRoot });
   }
   return map;
 }
@@ -92,7 +93,7 @@ function chordOverScale(chord: Tone[], scale: Tone[], style: Settings["labels"])
     dots.set(t.chroma, {
       label: style === "none" ? "" : pretty(t.name),
       fill: SECONDARY_FILL,
-      ink: "#c7ccd6",
+      ink: "var(--ghost-ink)",
       primary: false,
       root: false,
     });
@@ -120,7 +121,7 @@ export function buildView(s: Settings): View {
         subtitle: "Tap any fret to pick a different note",
         hint: "Look for the octave shapes: the same note two frets up and two strings over (three frets when you cross the B string).",
         legend: [t],
-        dots: new Map([[t.chroma, { label: s.labels === "none" ? "" : pretty(s.root), fill: DEGREE_COLORS[1], ink: "#111318", primary: true, root: true }]]),
+        dots: new Map([[t.chroma, { label: s.labels === "none" ? "" : pretty(s.root), fill: DEGREE_COLORS[1], ink: "#fff", primary: true, root: true }]]),
       };
     }
     const dots = new Map<number, Dot>();
@@ -130,7 +131,7 @@ export function buildView(s: Settings): View {
       dots.set(c, {
         label: s.labels === "none" ? "" : pretty(nameForChroma(c, s.preferFlats)),
         fill: natural ? NATURAL_FILL : ACCIDENTAL_FILL,
-        ink: natural ? "#111318" : "#f3f4f6",
+        ink: natural ? "#1c1c1e" : "var(--label)",
         primary: true,
         root: false,
       });

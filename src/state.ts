@@ -31,6 +31,10 @@ export interface Settings {
   highStringTop: boolean;
   realSpacing: boolean;
   sound: boolean;
+  /** "system" follows the iPad's light/dark setting. */
+  appearance: "system" | "light" | "dark";
+  /** Sidebar shown on wide screens (on narrow screens it slides over and starts hidden). */
+  sidebarOpen: boolean;
 }
 
 export const DEFAULTS: Settings = {
@@ -55,6 +59,8 @@ export const DEFAULTS: Settings = {
   highStringTop: true,
   realSpacing: true,
   sound: true,
+  appearance: "system",
+  sidebarOpen: true,
 };
 
 const STORAGE_KEY = "fret-wiz.settings.v1";
@@ -71,6 +77,19 @@ function load(): Settings {
   } catch {
     return DEFAULTS;
   }
+}
+
+/** Track a CSS media query (e.g. dark mode, narrow screen). */
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatches(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [query]);
+  return matches;
 }
 
 /** Settings that survive reloads (stored in this browser only). */

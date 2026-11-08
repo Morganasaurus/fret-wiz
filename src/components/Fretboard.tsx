@@ -22,7 +22,7 @@ interface Props {
   onPick?: (pos: FretPosition) => void;
 }
 
-const W = 1200;
+const W = 1040;
 const STRING_GAP = 46;
 const PAD_Y = 30;
 const LABEL_W = 34;
@@ -75,22 +75,14 @@ export function Fretboard(props: Props) {
       aria-label="Guitar fretboard"
       style={{ aspectRatio: `${W} / ${H}` }}
     >
-      <defs>
-        <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3a2a1e" />
-          <stop offset="0.5" stopColor="#44301f" />
-          <stop offset="1" stopColor="#36271b" />
-        </linearGradient>
-      </defs>
-
       {/* Neck */}
       <rect
         x={Math.min(X(nutX), X(W - PAD_RIGHT))}
         y={boardTop - 16}
         width={boardW}
         height={boardH + 32}
-        rx={4}
-        fill="url(#wood)"
+        rx={8}
+        className="neck"
       />
 
       {/* Out-of-range shading */}
@@ -106,20 +98,19 @@ export function Fretboard(props: Props) {
             y={boardTop - 16}
             width={Math.abs(x2 - x1)}
             height={boardH + 32}
-            fill="#0b0c0f"
-            opacity={0.55}
+            className="neck-shade"
           />
         );
       })}
 
       {/* Inlays */}
       {SINGLE_INLAYS.filter((f) => f <= frets).map((f) => (
-        <circle key={`in-${f}`} cx={X(fretCenter(f))} cy={midY} r={7} fill="#d9cbb3" opacity={0.35} />
+        <circle key={`in-${f}`} cx={X(fretCenter(f))} cy={midY} r={6} className="inlay" />
       ))}
       {DOUBLE_INLAYS.filter((f) => f <= frets).map((f) => (
-        <g key={`in-${f}`} fill="#d9cbb3" opacity={0.35}>
-          <circle cx={X(fretCenter(f))} cy={boardTop + boardH * 0.25} r={7} />
-          <circle cx={X(fretCenter(f))} cy={boardTop + boardH * 0.75} r={7} />
+        <g key={`in-${f}`} className="inlay">
+          <circle cx={X(fretCenter(f))} cy={boardTop + boardH * 0.25} r={6} />
+          <circle cx={X(fretCenter(f))} cy={boardTop + boardH * 0.75} r={6} />
         </g>
       ))}
 
@@ -131,8 +122,9 @@ export function Fretboard(props: Props) {
           x2={X(x)}
           y1={boardTop - 16}
           y2={boardTop + boardH + 16}
-          stroke={f === 0 ? "#e8e2d4" : "#9aa0a8"}
-          strokeWidth={f === 0 ? 7 : 2.5}
+          className={f === 0 ? "nut" : "fret-wire"}
+          strokeWidth={f === 0 ? 6 : 2}
+          strokeLinecap="round"
         />
       ))}
 
@@ -142,7 +134,7 @@ export function Fretboard(props: Props) {
         const thickness = 1 + ((n - 1 - s) / Math.max(1, n - 1)) * 2.4;
         return (
           <g key={`s-${s}`}>
-            <line x1={X(LABEL_W + 8)} x2={X(W - PAD_RIGHT)} y1={y} y2={y} stroke="#cfd3da" strokeWidth={thickness} opacity={0.85} />
+            <line x1={X(LABEL_W + 8)} x2={X(W - PAD_RIGHT)} y1={y} y2={y} className="string-line" strokeWidth={thickness} />
             <text x={X(LABEL_W / 2)} y={y} className="string-label" textAnchor="middle" dominantBaseline="central">
               {pretty(open.replace(/\d+$/, ""))}
             </text>
@@ -214,20 +206,19 @@ export function Fretboard(props: Props) {
           <g
             key={`${p.string}-${p.fret}`}
             className="pos"
-            opacity={dim ? 0.18 : faded ? (dot.primary ? 0.32 : 0.22) : 1}
+            opacity={dim ? 0.2 : faded ? (dot.primary ? 0.35 : 0.5) : 1}
             data-inshape={inShape && shape ? String(shape.get(`${p.string}:${p.fret}`)) : undefined}
             onClick={() => onPick?.(p)}
           >
-            {inShape && voicing && <circle cx={cx} cy={cy} r={r + 6} fill={dot.fill} opacity={0.25} />}
+            {inShape && voicing && <circle cx={cx} cy={cy} r={r + 6} style={{ fill: dot.fill }} opacity={0.22} />}
             {hit}
-            {dot.root && <circle cx={cx} cy={cy} r={r + 3.5} fill="none" stroke={dot.fill} strokeWidth={2.5} />}
+            {dot.root && <circle cx={cx} cy={cy} r={r + 3.5} fill="none" style={{ stroke: dot.fill }} strokeWidth={2.5} />}
             <circle
               cx={cx}
               cy={cy}
               r={r}
-              fill={dot.fill}
-              stroke={dot.root ? "#fff7e6" : "#0b0c0f"}
-              strokeWidth={dot.root ? 2 : 1.5}
+              style={{ fill: dot.fill }}
+              className={dot.root ? "dot dot-root" : dot.primary ? "dot" : "dot dot-secondary"}
             />
             {dot.label && (
               <text
@@ -236,7 +227,7 @@ export function Fretboard(props: Props) {
                 textAnchor="middle"
                 dominantBaseline="central"
                 className="dot-label"
-                fill={dot.ink}
+                style={{ fill: dot.ink }}
                 fontSize={fontSize}
                 fontWeight={dot.root ? 800 : 650}
               >

@@ -16,7 +16,7 @@ You review. You do not fix. Never edit, create or delete project files, and do n
 1. Make sure the dev server is running (`npm run dev`, port 5173; in the Claude desktop app use the browser
    preview config named `fret-wiz`). Prefer the built-in browser tools; use Claude in Chrome only if those are
    unavailable.
-2. **Open your own new tab.** Morgan may be using the main tab; don't drive it, and close your tab at the end.
+2. **Open your own new tab.** The user may be using the main tab; don't drive it, and close your tab at the end.
 3. Check the screens the change touches (or all four modes if asked for a full pass: Keys & songwriting,
    Chords, Scales, Notes) at **1133×744** (landscape) and **744×1133** (portrait). Reset the viewport to the
    desktop preset when done.
