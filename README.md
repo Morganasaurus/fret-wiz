@@ -16,8 +16,11 @@ interactive neck. It's a static web app: everything runs in the browser and sett
 - **Scales**: major, minor, pentatonics, blues, the modes, harmonic and melodic minor, symmetric scales, practice
   shapes (pentatonic boxes, three-notes-per-string shapes) and the chords built from each scale
 - **Notes**: every note, naturals only, or one note everywhere it appears (tap any fret to pick it)
-- **Sound**: tap a chord or fret to hear it, played with real steel-string acoustic guitar recordings (with a
-  small synth as a fallback while they load)
+- **Sound**: tap a chord or fret to hear it, played with real steel-string acoustic guitar recordings (a small
+  synth is only used if the recordings can't be loaded)
+- **Metronome and speed trainer**: set a start and target tempo and it speeds up a few BPM every few bars, so you
+  can build speed on a scale or riff; 2/4 to 5/4, clicks on beats, 8ths, triplets or 16ths, and it keeps
+  running while you switch between modes
 - Labels as note names, intervals (R, ♭3, 5, ♭7) or blank, a "how to read this" hint for each view, and a guide to
   what each interval sounds like
 - Colours by scale degree, so a 3rd is always blue and a 5th always red
@@ -101,6 +104,14 @@ The tags are listed on the repository's **Packages** page.
 Pick a mode in the sidebar (Keys & Songwriting, Chords, Scales, Notes), then tap chords, shapes and frets.
 Settings (gear icon) has appearance, sound, tuning, fret count, fret-range focus and left-handed options.
 
+### Building speed with the metronome
+
+Tap the metronome icon in the toolbar. In **Speed trainer** mode, set the **start** tempo (one you can play
+cleanly), the **target**, how much to **speed up by** and how often (**every** few bars). Press play: it climbs
+step by step and shows how far you've got, then either keeps going at the target or starts again from the
+bottom. Pick **Steady** for a plain metronome. A good routine: pick a scale shape in Scales, start the trainer,
+and play the shape up and down in time; if it falls apart, stop and set the start a few BPM lower.
+
 ### Keyboard shortcuts
 
 | Key | Does |
@@ -109,6 +120,7 @@ Settings (gear icon) has appearance, sound, tuning, fret count, fret-range focus
 | 1 – 9 | Pick a chord shape, or in Scales a scale shape (0 = whole neck) |
 | ← → | Previous / next chord in the key or scale |
 | P | Play / stop your progression (Keys) |
+| M | Start / stop the metronome |
 | A | Add the selected chord to your progression (Keys) |
 | S | Show / hide the sidebar |
 

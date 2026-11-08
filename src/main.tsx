@@ -11,5 +11,6 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
-// Fetch the guitar recordings in the background once the page has settled (~2 MB, cached by the browser).
-setTimeout(preloadSamples, 1500);
+// Fetch and decode the guitar recordings straight away (~2 MB, cached by the browser), so the first tap
+// already sounds like a guitar.
+void preloadSamples();

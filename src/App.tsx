@@ -3,10 +3,12 @@ import { playSequence, pluck, stopAll, strum } from "./audio";
 import { CatalogSelect, ChordRow, IntervalGuide, Legend, RootPicker, Segmented } from "./components/Controls";
 import { HearingCard, InspectorPlaceholder, ShortcutsCard, Transport } from "./components/Desktop";
 import { Fretboard } from "./components/Fretboard";
-import { GearIcon, SidebarIcon, SpeakerIcon } from "./components/Icons";
+import { GearIcon, MetronomeIcon, SidebarIcon, SpeakerIcon } from "./components/Icons";
+import { MetronomeCard } from "./components/Metronome";
 import { ScalePicker, ShapeBar } from "./components/ScaleTools";
 import { CheckList, Group, SettingsSheet, Sidebar } from "./components/Shell";
 import { KeyWorkshop, KeysWithChord, type Playback, ShapePanel, shapesFor } from "./components/Workshop";
+import { startMetronome, stopMetronome, updateMetronome, useMetronome } from "./metronome";
 import { createProgression } from "./progressions";
 import { type LabelStyle, type Mode, type Settings, useMediaQuery, useSettings } from "./state";
 import { CHORDS } from "./theory/catalog";
@@ -174,6 +176,25 @@ export default function App() {
     update({ progressions: rest, activeProgressionId: rest[0].id, root: rest[0].tonic, keyMode: rest[0].quality });
   };
 
+  // ---- metronome (keeps running across modes) ----
+  const metro = useMetronome();
+  useEffect(() => updateMetronome(s.metronome), [s.metronome]);
+  const toggleMetronome = () => {
+    if (metro.running) stopMetronome();
+    else {
+      startMetronome(s.metronome);
+      if (!s.metronomeOpen) update({ metronomeOpen: true });
+    }
+  };
+  const metronomeCard = s.metronomeOpen && (
+    <MetronomeCard
+      t={s.metronome}
+      desktop={desktop}
+      onChange={(metronome) => update({ metronome })}
+      onClose={() => update({ metronomeOpen: false })}
+    />
+  );
+
   // ---- sidebar: remembered on wide screens, slides over (and starts hidden) on narrow ones ----
   const [overlayOpen, setOverlayOpen] = useState(false);
   const sidebarOpen = narrow ? overlayOpen : s.sidebarOpen;
@@ -241,6 +262,7 @@ export default function App() {
     }
     const lower = k.toLowerCase();
     if (lower === "s") toggleSidebar();
+    else if (lower === "m") toggleMetronome();
     else if (lower === "p" && s.mode === "key") (playback?.label === active.name ? stop : playActive)();
     else if (lower === "a" && s.mode === "key" && s.selected) setSteps([...active.steps, s.selected]);
     else return;
@@ -548,6 +570,28 @@ export default function App() {
               Show whole key
             </button>
           )}
+          {metro.running && (
+            <button
+              type="button"
+              className={`metro-pill ${metro.beat === 0 ? "accent" : ""}`}
+              key={`${metro.bar}-${metro.beat}`}
+              aria-label={`Stop metronome (${metro.point?.bpm ?? s.metronome.start} BPM)`}
+              onClick={stopMetronome}
+            >
+              <span className="metro-pill-dot" />
+              {metro.point?.bpm ?? s.metronome.start}
+            </button>
+          )}
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={s.metronomeOpen ? "Hide metronome" : "Show metronome"}
+            aria-pressed={s.metronomeOpen}
+            title={desktop ? "Metronome (M starts / stops)" : undefined}
+            onClick={() => update({ metronomeOpen: !s.metronomeOpen })}
+          >
+            <MetronomeIcon />
+          </button>
           <Segmented<LabelStyle>
             label="Labels"
             value={s.mode === "notes" && s.labels === "interval" ? "name" : s.labels}
@@ -591,6 +635,7 @@ export default function App() {
             )}
           </div>
 
+          {metronomeCard}
           {desktop ? (
             <>
               <div className={`top-row ${inspector || placeholder ? "" : "solo"}`}>
@@ -622,6 +667,7 @@ export default function App() {
           update={update}
           onReset={() => {
             stop();
+            stopMetronome();
             reset();
             setSettingsOpen(false);
           }}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { type SavedProgression, migrateProgressions } from "./progressions";
 import type { ChordRef, KeyQuality } from "./theory/harmony";
+import { TRAINER_DEFAULTS, type TrainerSettings, normalizeTrainer } from "./trainer";
 
 export type Mode = "notes" | "scale" | "chord" | "key";
 export type LabelStyle = "name" | "interval" | "none";
@@ -38,6 +39,10 @@ export interface Settings {
   appearance: "system" | "light" | "dark";
   /** Sidebar shown on wide screens (on narrow screens it slides over and starts hidden). */
   sidebarOpen: boolean;
+  /** Metronome / speed trainer settings. */
+  metronome: TrainerSettings;
+  /** Metronome card shown. */
+  metronomeOpen: boolean;
 }
 
 export const DEFAULTS: Settings = {
@@ -64,6 +69,8 @@ export const DEFAULTS: Settings = {
   sound: true,
   appearance: "system",
   sidebarOpen: true,
+  metronome: TRAINER_DEFAULTS,
+  metronomeOpen: false,
 };
 
 const STORAGE_KEY = "fret-wiz.settings.v1";
@@ -77,6 +84,7 @@ function load(): Settings {
     if (s.keyMode !== "major" && s.keyMode !== "minor") s.keyMode = "minor";
     const parsed = JSON.parse(raw);
     Object.assign(s, migrateProgressions(parsed));
+    s.metronome = normalizeTrainer(parsed.metronome);
     delete (s as unknown as Record<string, unknown>).progression;
     return s;
   } catch {

@@ -72,3 +72,11 @@ export const CloseIcon = () => (
     <path d="M6 6l12 12M18 6L6 18" />
   </svg>
 );
+
+export const MetronomeIcon = () => (
+  <svg {...base}>
+    <path d="M9.2 3.5h5.6L19 20.5H5z" />
+    <path d="M12 15.5l5-8.5" />
+    <path d="M7.2 15.5h9.6" />
+  </svg>
+);

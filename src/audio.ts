@@ -2,12 +2,13 @@
  * Guitar sound.
  *
  * Plays real steel-string acoustic guitar recordings (University of Iowa samples, see README), one recording
- * every three semitones, pitched to the notes in between. Until the samples have loaded (or if they fail),
- * it falls back to a small plucked-string synth (Karplus-Strong). A light reverb gives the dry recordings
+ * every three semitones, pitched to the notes in between. If the recordings can't be loaded it falls back to
+ * a small plucked-string synth (Karplus-Strong). A light reverb gives the dry recordings
  * some room.
  *
- * iOS only allows audio after a tap, so the AudioContext is created on the first sound. The sample files are
- * fetched early (see `preloadSamples`) and decoded on first use.
+ * iOS only allows audio after a tap, so the AudioContext is created on the first sound. The recordings are
+ * fetched and decoded as soon as the page loads (see `preloadSamples`); a sound asked for before they are
+ * ready waits for them, so the synth is only heard if the files can't be loaded at all.
  */
 
 const SAMPLE_NOTES: [file: string, midi: number][] = [
@@ -36,50 +37,37 @@ interface Sample {
 
 let ctx: AudioContext | null = null;
 let input: GainNode | null = null;
-let rawFiles: Promise<[number, ArrayBuffer][]> | null = null;
+let master: DynamicsCompressorNode | null = null;
+let loading: Promise<Sample[]> | null = null;
 let samples: Sample[] | null = null;
-let decoding = false;
-let samplesFailed = false;
 const synthBuffers = new Map<number, AudioBuffer>();
 let active: { src: AudioBufferSourceNode; gain: GainNode }[] = [];
 
-/** Start downloading the sample files (no audio permission needed). Safe to call more than once. */
-export function preloadSamples() {
-  if (rawFiles) return;
-  rawFiles = Promise.all(
+/**
+ * Download and decode the recordings. Decoding uses an OfflineAudioContext, which needs no tap, so the
+ * guitar is ready before the first sound instead of starting on the synth. Safe to call more than once;
+ * after a failure the next call tries again.
+ */
+export function preloadSamples(): Promise<Sample[]> {
+  if (loading) return loading;
+  const decoder = new OfflineAudioContext(1, 1, 44100);
+  loading = Promise.all(
     SAMPLE_NOTES.map(async ([file, midi]) => {
       const res = await fetch(`${SAMPLE_DIR}${file}.mp3`);
       if (!res.ok) throw new Error(`${file}: HTTP ${res.status}`);
-      return [midi, await res.arrayBuffer()] as [number, ArrayBuffer];
+      const buffer = await decoder.decodeAudioData(await res.arrayBuffer());
+      return { midi, buffer, offset: leadingSilence(buffer) };
     }),
+  ).then(
+    (decoded) => (samples = decoded.sort((a, b) => a.midi - b.midi)),
+    (err) => {
+      loading = null;
+      console.warn("Guitar samples failed to load, using the synth:", err);
+      throw err;
+    },
   );
-  rawFiles.catch(() => {
-    samplesFailed = true;
-  });
-}
-
-function decodeSamples(c: AudioContext) {
-  if (samples || decoding || samplesFailed) return;
-  decoding = true;
-  preloadSamples();
-  rawFiles!
-    .then((files) =>
-      Promise.all(
-        files.map(async ([midi, bytes]) => {
-          const buffer = await c.decodeAudioData(bytes.slice(0));
-          return { midi, buffer, offset: leadingSilence(buffer) };
-        }),
-      ),
-    )
-    .then((decoded) => {
-      samples = decoded.sort((a, b) => a.midi - b.midi);
-    })
-    .catch(() => {
-      samplesFailed = true;
-    })
-    .finally(() => {
-      decoding = false;
-    });
+  loading.catch(() => {});
+  return loading;
 }
 
 function leadingSilence(buffer: AudioBuffer): number {
@@ -108,6 +96,7 @@ function audio(): { ctx: AudioContext; input: GainNode } {
     ctx = new AudioContext();
     const comp = ctx.createDynamicsCompressor();
     comp.connect(ctx.destination);
+    master = comp;
     input = ctx.createGain();
     input.gain.value = 0.8;
     const dry = ctx.createGain();
@@ -120,13 +109,32 @@ function audio(): { ctx: AudioContext; input: GainNode } {
     input.connect(reverb).connect(wet).connect(comp);
   }
   if (ctx.state === "suspended") void ctx.resume();
-  decodeSamples(ctx);
   return { ctx, input: input! };
 }
 
 /** True once the real guitar recordings are ready (otherwise the synth is used). */
 export function usingSamples(): boolean {
   return !!samples;
+}
+
+/** How long a sound waits for the recordings before giving up and using the synth. */
+const WAIT_FOR_SAMPLES_MS = 2500;
+let latestRequest = 0;
+
+/**
+ * Run `play` with the guitar. If the recordings are still loading, wait for them (briefly) rather than
+ * playing the synth; only the latest request is played, so taps made while loading don't pile up.
+ */
+function withGuitar(play: (c: AudioContext, out: AudioNode) => void) {
+  const { ctx: c, input: out } = audio(); // created inside the tap, as iOS requires
+  if (samples) return play(c, out);
+  const request = ++latestRequest;
+  const timeout = new Promise((resolve) => setTimeout(resolve, WAIT_FOR_SAMPLES_MS));
+  Promise.race([preloadSamples(), timeout])
+    .catch(() => {})
+    .then(() => {
+      if (request === latestRequest) play(c, out);
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -224,29 +232,82 @@ const jitter = (amount: number) => (Math.random() * 2 - 1) * amount;
  */
 export function strum(midis: number[], spread = 0.03) {
   if (!midis.length) return;
-  const { ctx: c, input: out } = audio();
-  stopAll(0.05);
-  const start = c.currentTime + 0.03;
-  const level = 0.55 / Math.sqrt(midis.length);
-  let t = start;
-  midis.forEach((m, i) => {
-    if (i > 0) t += Math.max(0.008, spread + jitter(0.008));
-    // Strings later in a downstroke are hit a touch softer.
-    const loudness = level * (1 - i * 0.03) * (1 + jitter(0.12));
-    voice(c, out, m, t, loudness);
+  withGuitar((c, out) => {
+    stopAll(0.05);
+    const start = c.currentTime + 0.03;
+    const level = 0.55 / Math.sqrt(midis.length);
+    let t = start;
+    midis.forEach((m, i) => {
+      if (i > 0) t += Math.max(0.008, spread + jitter(0.008));
+      // Strings later in a downstroke are hit a touch softer.
+      const loudness = level * (1 - i * 0.03) * (1 + jitter(0.12));
+      voice(c, out, m, t, loudness);
+    });
   });
 }
 
 /** Play notes one after another (e.g. a scale shape), each fading after `ring` seconds. */
 export function playSequence(midis: number[], gap = 0.26, ring = 0.9) {
   if (!midis.length) return;
-  const { ctx: c, input: out } = audio();
-  stopAll();
-  const start = c.currentTime + 0.05;
-  midis.forEach((m, i) => voice(c, out, m, start + i * gap, 0.4 * (1 + jitter(0.08)), ring));
+  withGuitar((c, out) => {
+    stopAll();
+    const start = c.currentTime + 0.05;
+    midis.forEach((m, i) => voice(c, out, m, start + i * gap, 0.4 * (1 + jitter(0.08)), ring));
+  });
 }
 
 /** Play a single note. */
 export function pluck(midi: number) {
   strum([midi], 0);
+}
+
+// ---------------------------------------------------------------------------
+// Metronome click
+// ---------------------------------------------------------------------------
+
+export type ClickKind = "accent" | "beat" | "sub";
+
+/** The audio clock (creating the AudioContext if needed: call it from a tap the first time). */
+export function audioClock(): AudioContext {
+  return audio().ctx;
+}
+
+const CLICK: Record<ClickKind, { freq: number; level: number }> = {
+  accent: { freq: 1760, level: 1 },
+  beat: { freq: 1175, level: 0.7 },
+  sub: { freq: 880, level: 0.32 },
+};
+
+/**
+ * A short woodblock-like tick at audio time `t`, dry (no reverb), unaffected by `stopAll`.
+ * Returns a function that cancels it if it hasn't sounded yet.
+ */
+export function scheduleClick(t: number, kind: ClickKind, volume: number): () => void {
+  const { ctx: c } = audio();
+  const { freq, level } = CLICK[kind];
+  const osc = c.createOscillator();
+  const body = c.createOscillator();
+  const gain = c.createGain();
+  osc.frequency.value = freq;
+  body.type = "triangle";
+  body.frequency.value = freq / 2;
+  const peak = Math.max(0.0001, level * volume * 0.9);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(peak, t + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.055);
+  osc.connect(gain);
+  body.connect(gain);
+  gain.connect(master!);
+  osc.start(t);
+  body.start(t);
+  osc.stop(t + 0.07);
+  body.stop(t + 0.07);
+  return () => {
+    try {
+      osc.stop();
+      body.stop();
+    } catch {
+      /* already finished */
+    }
+  };
 }

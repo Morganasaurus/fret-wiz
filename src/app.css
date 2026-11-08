@@ -1579,3 +1579,253 @@ h3 {
   flex-direction: column;
   gap: 6px;
 }
+
+/* -------------------------------------------------------------------------
+   Metronome / speed trainer
+   ------------------------------------------------------------------------- */
+
+.metro-card {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metro-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.metro-play {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+}
+
+.metro-card.running .metro-play {
+  background: var(--red);
+}
+
+.metro-tempo {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: none;
+  min-width: 86px;
+}
+
+.metro-bpm {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.metro-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label2);
+}
+
+.metro-beats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.metro-beat {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--fill);
+  transition: background 0.06s, transform 0.06s;
+}
+
+.metro-beat.accent {
+  width: 18px;
+  height: 18px;
+}
+
+.metro-beat.on {
+  background: var(--tint);
+  transform: scale(1.15);
+}
+
+.metro-beat.accent.on {
+  background: var(--deg-1);
+}
+
+.metro-status {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--label2);
+}
+
+.metro-status > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metro-progress {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--fill);
+}
+
+.metro-progress > div {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--green);
+  transition: width 0.3s;
+}
+
+.metro-ends {
+  position: absolute;
+  inset: 8px 0 auto;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--label3);
+  font-variant-numeric: tabular-nums;
+}
+
+.metro-card .metro-status:has(.metro-progress) {
+  padding-bottom: 12px;
+}
+
+.metro-setup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--sep);
+}
+
+.metro-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.metro-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label2);
+}
+
+.metro-field .segmented button {
+  min-height: var(--tap);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  background: var(--fill2);
+  border-radius: 10px;
+  height: var(--tap);
+}
+
+.stepper-btn {
+  width: var(--tap);
+  height: var(--tap);
+  border: 0;
+  background: none;
+  color: var(--tint);
+  font-size: 22px;
+  font-weight: 500;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stepper-btn:disabled {
+  color: var(--label3);
+}
+
+.stepper input {
+  width: 44px;
+  border: 0;
+  background: none;
+  text-align: center;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+  padding: 0;
+}
+
+.stepper-unit {
+  font-size: 12px;
+  color: var(--label2);
+  margin-right: 2px;
+}
+
+.metro-volume {
+  width: 150px;
+  height: var(--tap);
+  accent-color: var(--tint);
+}
+
+.metro-tip {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* Running indicator in the toolbar: tap to stop. */
+.metro-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--tint-soft);
+  color: var(--tint);
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.metro-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: metro-flash 0.18s ease-out;
+}
+
+.metro-pill.accent .metro-pill-dot {
+  background: var(--deg-1);
+}
+
+@keyframes metro-flash {
+  from {
+    transform: scale(1.8);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 760px) {
+  .metro-main {
+    flex-wrap: wrap;
+  }
+  .metro-status {
+    order: 5;
+    flex-basis: 100%;
+  }
+}

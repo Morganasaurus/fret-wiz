@@ -30,12 +30,18 @@ vitest for tests. No backend; settings and the user's progression live in `local
   workshop in three columns, a play bar in the header, hover details on frets, and defaults Automatic appearance to
   dark (OLED). The iPad layout must stay unchanged; check 1133×744 and 744×1133 after desktop changes.
 - Keyboard shortcuts live in `App.tsx` (`onKey`): Space strum / play shape, 1–9 shapes (0 = whole neck in
-  Scales), ← → chords, P play/stop, A add to progression, S sidebar. Keep `ShortcutsCard` and the README in sync.
+  Scales), ← → chords, P play/stop, A add to progression, M metronome, S sidebar. Keep `ShortcutsCard` and the README in sync.
 - Saved progressions (`src/progressions.ts`): each has a name, key and steps; the active one always follows the
   current key in Keys mode.
 - `src/audio.ts`: Web Audio guitar. Plays steel-string recordings from `public/samples/guitar-steel/` (13 files,
   one every 3 semitones, pitched to the notes between; credits in that folder and the README), with a light reverb
-  and slightly randomised strums. Falls back to a Karplus-Strong synth until the samples have decoded.
+  and slightly randomised strums. The recordings are fetched and decoded (OfflineAudioContext) as soon as the page
+  loads; a sound requested before they're ready waits for them (up to 2.5 s) instead of using the synth, so the
+  Karplus-Strong synth is only heard if the files can't be loaded. All guitar sound goes through `withGuitar`.
+- Metronome / speed trainer: ramp maths in `src/trainer.ts` (pure, tested), the lookahead click scheduler in
+  `src/metronome.ts` (Web Audio clock, keeps running across modes, `useMetronome` hook), clicks from
+  `scheduleClick` in `audio.ts` (dry, not stopped by `stopAll`), UI in `components/Metronome.tsx` (card above the
+  neck, toolbar icon, a BPM pill while running). Settings live in `metronome` / `metronomeOpen`.
 
 ## Music-theory rules already decided
 

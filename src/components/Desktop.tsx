@@ -110,7 +110,7 @@ export function ShortcutsCard({ mode }: { mode: Mode }) {
   else if (mode !== "notes") rows.push(["Pick a chord shape", ["1", "–", "9"]]);
   if (mode === "key" || mode === "scale") rows.push(["Previous / next chord", ["←", "→"]]);
   if (mode === "key") rows.push(["Play / stop progression", ["P"]], ["Add chord to progression", ["A"]]);
-  rows.push(["Show / hide sidebar", ["S"]]);
+  rows.push(["Start / stop metronome", ["M"]], ["Show / hide sidebar", ["S"]]);
   return (
     <section className="page-section">
       <h3>Keyboard</h3>
