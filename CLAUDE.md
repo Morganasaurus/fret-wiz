@@ -64,7 +64,7 @@ vitest for tests. No backend; settings and the user's progression live in `local
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173 (.claude/launch.json has the "fret-wiz" preview config)
+npm run dev        # http://localhost:5173
 npm test           # vitest
 npm run build      # typecheck + production build
 ```
@@ -72,13 +72,6 @@ npm run build      # typecheck + production build
 Before calling UI work done: `npm test`, `npm run build`, then look at it in the browser at **1133×744** (iPad mini
 landscape) and **744×1133** (portrait). Touch targets must be at least 44px. Check the console for errors.
 The user may be clicking in the browser pane at the same time: use a separate tab for checks.
-
-Two review subagents live in `.claude/agents/`:
-- `music-theory-reviewer`: use after changing anything in `src/theory/`, chord or scale shapes, or wording that
-  teaches theory.
-- `ipad-ui-reviewer`: use after visible UI changes, to check both iPad sizes in the browser.
-- `security-reviewer`: use after changing `nginx.conf`, the `Dockerfile`, `docker-compose.yml`, the workflow,
-  dependencies, or code that reads URLs, storage or user input; and before a release that touches any of them.
 
 ## Security
 
@@ -92,7 +85,7 @@ external resource needs a CSP change. Workflow actions are pinned to commit SHAs
 
 ## Release and deploy
 
-Use `/release` (`.claude/skills/release/`). In short: tests and build pass → commit → push `main` → GitHub Actions
+Tests and build pass → commit → push `main` → GitHub Actions
 (`.github/workflows/build.yml`) tests, builds and publishes `ghcr.io/morganasaurus/fret-wiz` as `latest` and
 `sha-<short>`. The image is public.
 
