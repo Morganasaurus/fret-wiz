@@ -6,3 +6,4 @@ coverage/
 .vite/
 src/_probe*
 *.tsbuildinfo
+.claude/
